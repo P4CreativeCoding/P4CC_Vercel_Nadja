@@ -1,3 +1,5 @@
+//inspiriert von Jona Strickler
+
 const app = require("express")();
 const { v4 } = require("uuid");
 
