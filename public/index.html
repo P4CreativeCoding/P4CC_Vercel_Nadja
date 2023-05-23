@@ -9,8 +9,14 @@
     </style>
   </head>
   <body>
-    <canvas id="gameCanvas" width="800" height="400"></canvas>
-    <script src="/socket.io/socket.io.js"></script>
+    <div id="gameContainer">
+      <canvas
+        id="gameCanvas"
+        width="800"
+        height="600"
+        style="display: none"
+      ></canvas>
+    </div>
     <script>
       const canvas = document.getElementById("gameCanvas");
       const context = canvas.getContext("2d");
@@ -35,49 +41,21 @@
         dy: 0,
       };
 
-      const socket = io();
+      // WebSocket-Verbindung herstellen
+      const socket = new WebSocket("ws://localhost:3000");
 
-      document.addEventListener("keydown", function (event) {
-        if (event.key === "w") {
-          redCar.dy = -carSpeed;
-          socket.emit("redCarMovement", { dy: -carSpeed });
-        } else if (event.key === "s") {
-          redCar.dy = carSpeed;
-          socket.emit("redCarMovement", { dy: carSpeed });
-        } else if (event.key === "a") {
-          redCar.dx = -carSpeed;
-          socket.emit("redCarMovement", { dx: -carSpeed });
-        } else if (event.key === "d") {
-          redCar.dx = carSpeed;
-          socket.emit("redCarMovement", { dx: carSpeed });
-        } else if (event.key === "ArrowUp") {
-          blueCar.dy = -carSpeed;
-          socket.emit("blueCarMovement", { dy: -carSpeed });
-        } else if (event.key === "ArrowDown") {
-          blueCar.dy = carSpeed;
-          socket.emit("blueCarMovement", { dy: carSpeed });
-        } else if (event.key === "ArrowLeft") {
-          blueCar.dx = -carSpeed;
-          socket.emit("blueCarMovement", { dx: -carSpeed });
-        } else if (event.key === "ArrowRight") {
-          blueCar.dx = carSpeed;
-          socket.emit("blueCarMovement", { dx: carSpeed });
-        }
+      socket.addEventListener("open", function () {
+        console.log("WebSocket-Verbindung hergestellt");
       });
 
-      document.addEventListener("keyup", function (event) {
-        if (event.key === "w" || event.key === "s") {
-          redCar.dy = 0;
-          socket.emit("redCarMovement", { dy: 0 });
-        } else if (event.key === "a" || event.key === "d") {
-          redCar.dx = 0;
-          socket.emit("redCarMovement", { dx: 0 });
-        } else if (event.key === "ArrowUp" || event.key === "ArrowDown") {
-          blueCar.dy = 0;
-          socket.emit("blueCarMovement", { dy: 0 });
-        } else if (event.key === "ArrowLeft" || event.key === "ArrowRight") {
-          blueCar.dx = 0;
-          socket.emit("blueCarMovement", { dx: 0 });
+      socket.addEventListener("message", function (event) {
+        const data = JSON.parse(event.data);
+        if (data.car === "red") {
+          redCar.dx = data.dx || 0;
+          redCar.dy = data.dy || 0;
+        } else if (data.car === "blue") {
+          blueCar.dx = data.dx || 0;
+          blueCar.dy = data.dy || 0;
         }
       });
 
@@ -86,14 +64,48 @@
         context.fillRect(car.x, car.y, carWidth, carHeight);
       }
 
-      socket.on("redCarMovement", (movement) => {
-        redCar.dx = movement.dx || 0;
-        redCar.dy = movement.dy || 0;
+      document.addEventListener("keydown", function (event) {
+        if (event.key === "w") {
+          redCar.dy = -carSpeed;
+          socket.send(JSON.stringify({ car: "red", dy: -carSpeed }));
+        } else if (event.key === "s") {
+          redCar.dy = carSpeed;
+          socket.send(JSON.stringify({ car: "red", dy: carSpeed }));
+        } else if (event.key === "a") {
+          redCar.dx = -carSpeed;
+          socket.send(JSON.stringify({ car: "red", dx: -carSpeed }));
+        } else if (event.key === "d") {
+          redCar.dx = carSpeed;
+          socket.send(JSON.stringify({ car: "red", dx: carSpeed }));
+        } else if (event.key === "ArrowUp") {
+          blueCar.dy = -carSpeed;
+          socket.send(JSON.stringify({ car: "blue", dy: -carSpeed }));
+        } else if (event.key === "ArrowDown") {
+          blueCar.dy = carSpeed;
+          socket.send(JSON.stringify({ car: "blue", dy: carSpeed }));
+        } else if (event.key === "ArrowLeft") {
+          blueCar.dx = -carSpeed;
+          socket.send(JSON.stringify({ car: "blue", dx: -carSpeed }));
+        } else if (event.key === "ArrowRight") {
+          blueCar.dx = carSpeed;
+          socket.send(JSON.stringify({ car: "blue", dx: carSpeed }));
+        }
       });
 
-      socket.on("blueCarMovement", (movement) => {
-        blueCar.dx = movement.dx || 0;
-        blueCar.dy = movement.dy || 0;
+      document.addEventListener("keyup", function (event) {
+        if (event.key === "w" || event.key === "s") {
+          redCar.dy = 0;
+          socket.send(JSON.stringify({ car: "red", dy: 0 }));
+        } else if (event.key === "a" || event.key === "d") {
+          redCar.dx = 0;
+          socket.send(JSON.stringify({ car: "red", dx: 0 }));
+        } else if (event.key === "ArrowUp" || event.key === "ArrowDown") {
+          blueCar.dy = 0;
+          socket.send(JSON.stringify({ car: "blue", dy: 0 }));
+        } else if (event.key === "ArrowLeft" || event.key === "ArrowRight") {
+          blueCar.dx = 0;
+          socket.send(JSON.stringify({ car: "blue", dx: 0 }));
+        }
       });
 
       function update() {
