@@ -6,7 +6,7 @@ const app = express();
 const server = http.createServer(app);
 const io = socketIO(server);
 
-const port = 3000;
+const port = process.env.PORT || 3000;
 
 // Statische Dateien bereitstellen
 app.use(express.static(__dirname + "/public"));
