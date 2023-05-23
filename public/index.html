@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Autorennen</title>
+    <style>
+      canvas {
+        border: 1px solid black;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="gameCanvas" width="800" height="400"></canvas>
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+      const canvas = document.getElementById("gameCanvas");
+      const context = canvas.getContext("2d");
+
+      const carWidth = 40;
+      const carHeight = 20;
+      const carSpeed = 5;
+
+      let redCar = {
+        x: 50,
+        y: canvas.height / 2 - carHeight / 2,
+        color: "red",
+        dx: 0,
+        dy: 0,
+      };
+
+      let blueCar = {
+        x: canvas.width - 50 - carWidth,
+        y: canvas.height / 2 - carHeight / 2,
+        color: "blue",
+        dx: 0,
+        dy: 0,
+      };
+
+      const socket = io();
+
+      document.addEventListener("keydown", function (event) {
+        if (event.key === "w") {
+          redCar.dy = -carSpeed;
+          socket.emit("redCarMovement", { dy: -carSpeed });
+        } else if (event.key === "s") {
+          redCar.dy = carSpeed;
+          socket.emit("redCarMovement", { dy: carSpeed });
+        } else if (event.key === "a") {
+          redCar.dx = -carSpeed;
+          socket.emit("redCarMovement", { dx: -carSpeed });
+        } else if (event.key === "d") {
+          redCar.dx = carSpeed;
+          socket.emit("redCarMovement", { dx: carSpeed });
+        } else if (event.key === "ArrowUp") {
+          blueCar.dy = -carSpeed;
+          socket.emit("blueCarMovement", { dy: -carSpeed });
+        } else if (event.key === "ArrowDown") {
+          blueCar.dy = carSpeed;
+          socket.emit("blueCarMovement", { dy: carSpeed });
+        } else if (event.key === "ArrowLeft") {
+          blueCar.dx = -carSpeed;
+          socket.emit("blueCarMovement", { dx: -carSpeed });
+        } else if (event.key === "ArrowRight") {
+          blueCar.dx = carSpeed;
+          socket.emit("blueCarMovement", { dx: carSpeed });
+        }
+      });
+
+      document.addEventListener("keyup", function (event) {
+        if (event.key === "w" || event.key === "s") {
+          redCar.dy = 0;
+          socket.emit("redCarMovement", { dy: 0 });
+        } else if (event.key === "a" || event.key === "d") {
+          redCar.dx = 0;
+          socket.emit("redCarMovement", { dx: 0 });
+        } else if (event.key === "ArrowUp" || event.key === "ArrowDown") {
+          blueCar.dy = 0;
+          socket.emit("blueCarMovement", { dy: 0 });
+        } else if (event.key === "ArrowLeft" || event.key === "ArrowRight") {
+          blueCar.dx = 0;
+          socket.emit("blueCarMovement", { dx: 0 });
+        }
+      });
+
+      function drawCar(car) {
+        context.fillStyle = car.color;
+        context.fillRect(car.x, car.y, carWidth, carHeight);
+      }
+
+      socket.on("redCarMovement", (movement) => {
+        redCar.dx = movement.dx || 0;
+        redCar.dy = movement.dy || 0;
+      });
+
+      socket.on("blueCarMovement", (movement) => {
+        blueCar.dx = movement.dx || 0;
+        blueCar.dy = movement.dy || 0;
+      });
+
+      function update() {
+        context.clearRect(0, 0, canvas.width, canvas.height);
+
+        redCar.x += redCar.dx;
+        redCar.y += redCar.dy;
+
+        blueCar.x += blueCar.dx;
+        blueCar.y += blueCar.dy;
+
+        drawCar(redCar);
+        drawCar(blueCar);
+
+        requestAnimationFrame(update);
+      }
+
+      update();
+    </script>
+  </body>
+</html>
