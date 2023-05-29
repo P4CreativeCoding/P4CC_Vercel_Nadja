@@ -4,5 +4,7 @@ body {
 }
 
 #gameCanvas {
+  width: 800px;
+  height: 600px;
   background-color: #f1f1f1;
 }
