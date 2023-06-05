@@ -1,14 +1,26 @@
 const express = require("express");
 const http = require("http");
 const socketIo = require("socket.io");
+const cors = require("cors");
 
 const app = express();
-
 const server = http.createServer(app);
 const io = socketIo(server);
 
+const path = require("path");
+
 const canvasWidth = 800;
 const canvasHeight = 600;
+
+const corsOptions = {
+  origin: "*",
+  methods: ["GET", "POST"],
+};
+
+app.use(cors(corsOptions));
+
+app.use(cors());
+app.use(express.static(__dirname + "/public"));
 
 // Zufällige Farbe generieren
 function getRandomColor() {
@@ -65,20 +77,62 @@ function isColliding(car1, car2) {
   );
 }
 
+// Passwortüberprüfungsfunktion
+function passwort_ueberpruefen(eingegebenes_passwort) {
+  const korrektes_passwort = "PASSWORT"; // das Passwort eintragen
+  return eingegebenes_passwort === korrektes_passwort;
+}
+
+// Passwortseite anzeigen
+app.get("/password", (req, res) => {
+  res.sendFile(__dirname + "/public/password.html");
+});
+
+// Spielseite anzeigen (nur zugänglich, wenn das Passwort korrekt eingegeben wurde)
+app.get("/", (req, res) => {
+  const password = req.query.password;
+  if (passwort_ueberpruefen(password)) {
+    res.setHeader("Access-Control-Allow-Origin", "*");
+    res.sendFile(__dirname + "/public/index.html");
+  } else {
+    res.status(401).send("Unauthorized");
+  }
+});
+
 io.on("connection", (socket) => {
-  cars[socket.id] = {
-    x: canvasWidth / 2,
-    y: canvasHeight / 2,
-    width: 30,
-    height: 30,
-    color: getRandomColor(),
-    dx: 0,
-    dy: 0,
-  };
+  console.log("Client connected:", socket.id);
 
-  io.emit("refreshAll", cars);
+  socket.on("password", (password) => {
+    const result = passwort_ueberpruefen(password);
+    socket.emit("passwordResult", result);
+  });
 
+  // Passwortüberprüfung
+  socket.on("authenticate", (password) => {
+    if (passwort_ueberpruefen(password)) {
+      console.log("Client authenticated:", socket.id);
+      cars[socket.id] = {
+        x: canvasWidth / 2,
+        y: canvasHeight / 2,
+        width: 30,
+        height: 30,
+        color: getRandomColor(),
+        dx: 0,
+        dy: 0,
+      };
+      socket.emit("authenticated", true);
+      io.emit("refreshAll", cars);
+    } else {
+      console.log("Client authentication failed:", socket.id);
+      socket.emit("authenticated", false);
+      socket.emit("passwordResult", false); // Neue Zeile: Senden Sie eine Nachricht, dass das Passwort falsch ist
+      socket.disconnect();
+    }
+  });
+
+  // Handle disconnect event
   socket.on("disconnect", () => {
+    console.log("Client disconnected:", socket.id);
     delete cars[socket.id];
     io.emit("refreshAll", cars);
   });

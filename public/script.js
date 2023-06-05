@@ -12,6 +12,14 @@ const canvasHeight = 600;
 // Autos
 let cars = {};
 
+socket.on("passwordResult", (result) => {
+  if (result) {
+    socket.emit("authenticate", document.getElementById("passwordInput").value);
+  } else {
+    alert("Falsches Passwort");
+  }
+});
+
 // Erstellen des Canvas-Elements
 const canvas = document.getElementById("gameCanvas");
 canvas.width = canvasWidth;
@@ -50,18 +58,42 @@ window.addEventListener("keydown", (event) => {
 });
 
 // Kollisionserkennung
-function checkCollision(car1, car2) {
+/*function checkCollision(car1, car2) {
   return (
     car1.x < car2.x + car2.width &&
     car1.x + car1.width > car2.x &&
     car1.y < car2.y + car2.height &&
     car1.y + car1.height > car2.y
   );
-}
+}*/
 
 // Spiel-Update
 function update() {
   context.clearRect(0, 0, canvasWidth, canvasHeight);
+
+  // Autos bewegen und Kollisionserkennung
+  for (let id in cars) {
+    const car = cars[id];
+    car.x += car.dx * speed;
+    car.y += car.dy * speed;
+
+    if (car.x < 0 || car.x + car.width > canvasWidth) {
+      car.dx *= -1;
+    }
+    if (car.y < 0 || car.y + car.height > canvasHeight) {
+      car.dy *= -1;
+    }
+
+    for (let otherId in cars) {
+      if (id !== otherId && isColliding(car, cars[otherId])) {
+        car.dx *= -1;
+        car.dy *= -1;
+      }
+    }
+
+    context.fillStyle = car.color;
+    context.fillRect(car.x, car.y, car.width, car.height);
+  }
 
   // Autos bewegen
   // cars.forEach((car) => {
