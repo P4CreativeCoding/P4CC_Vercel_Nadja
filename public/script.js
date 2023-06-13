@@ -1,5 +1,20 @@
 let socket = io.connect("localhost:3000");
 
+document.getElementById("submitButton").addEventListener("click", (e) => {
+  console.log("button clicked");
+  const password = document.getElementById("passwordInput").value;
+  socket.emit("authenticate", password);
+});
+
+socket.on("authenticated", (authenticated) => {
+  if (authenticated) {
+    alert("richtig");
+    //window.location.href = "/"; // Weiterleitung zur Spielseite
+  } else {
+    alert("Falsches Passwort");
+  }
+});
+
 socket.on("refreshAll", (data) => {
   cars = data;
   console.log("refreshed");

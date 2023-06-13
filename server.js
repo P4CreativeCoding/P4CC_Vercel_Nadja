@@ -110,6 +110,7 @@ io.on("connection", (socket) => {
 
   // Passwortüberprüfung
   socket.on("authenticate", (password) => {
+    console.log("auth");
     if (passwort_ueberpruefen(password)) {
       console.log("Client authenticated:", socket.id);
       cars[socket.id] = {

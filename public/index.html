@@ -9,33 +9,8 @@
     <script src="http://localhost:3000/socket.io/socket.io.js"></script>
     <script src="./script.js" type="text/javascript"></script>
     <h1>Passwort eingeben</h1>
-    <form id="passwordForm">
-      <input
-        type="password"
-        id="passwordInput"
-        placeholder="Passwort eingeben"
-      />
-      <button type="submit">Bestätigen</button>
-    </form>
 
-    <script>
-      const socket = io("http://localhost:3000");
-
-      document
-        .getElementById("passwordForm")
-        .addEventListener("submit", (e) => {
-          e.preventDefault();
-          const password = document.getElementById("passwordInput").value;
-          socket.emit("authenticate", password);
-        });
-
-      socket.on("authenticated", (authenticated) => {
-        if (authenticated) {
-          window.location.href = "/"; // Weiterleitung zur Spielseite
-        } else {
-          alert("Falsches Passwort");
-        }
-      });
-    </script>
+    <input type="password" id="passwordInput" placeholder="Passwort eingeben" />
+    <button id="submitButton">Bestätigen</button>
   </body>
 </html>
