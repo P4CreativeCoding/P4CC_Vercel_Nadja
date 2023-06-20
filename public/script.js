@@ -140,7 +140,7 @@ function update() {
   }
   //
   // });
-  console.log(cars);
+  // console.log(cars);
   requestAnimationFrame(update);
 }
 

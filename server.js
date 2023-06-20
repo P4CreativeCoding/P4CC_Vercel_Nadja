@@ -1,3 +1,6 @@
+//https://nodejs.dev/en/learn/how-to-read-environment-variables-from-nodejs/
+//einsetzten um Passwort nicht über Repo einsichtig zu machen
+
 const express = require("express");
 const http = require("http");
 const socketIo = require("socket.io");
