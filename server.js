@@ -1,6 +1,23 @@
 //https://nodejs.dev/en/learn/how-to-read-environment-variables-from-nodejs/
 //einsetzten um Passwort nicht über Repo einsichtig zu machen
 
+/*
+
+So hats bei mir funktioniert, probier das mal
+io.on("connection", function (socket) {
+  console.log("Neue Verbindung hergestellt");
+  socket.on("login", function (data) {
+    const password = data.password;
+    const requiredPassword = process.env.PASSWORD; // Umgebungsvariable laden
+
+    if (password !== requiredPassword) {
+      // Passwort ist nicht korrekt
+      socket.emit("loginError", "Falsches Passwort");
+      return;
+    }
+
+    */
+
 const express = require("express");
 const http = require("http");
 const socketIo = require("socket.io");
