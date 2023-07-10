@@ -120,64 +120,76 @@ app.get("/", (req, res) => {
   }
 });
 
-io.on("connection", (socket) => {
-  console.log("Client connected:", socket.id);
+io.on("connection", function (socket) {
+  console.log("Neue Verbindung hergestellt");
+  socket.on("login", function (data) {
+    const password = data.password;
+    const requiredPassword = process.env.PASSWORD; // Umgebungsvariable laden
 
-  socket.on("password", (password) => {
-    const result = passwort_ueberpruefen(password);
-    socket.emit("passwordResult", result);
-  });
+    if (password !== requiredPassword) {
+      // Passwort ist nicht korrekt
+      socket.emit("loginError", "Falsches Passwort");
+      return;
+    }
+    //io.on("connection", (socket) => {
+    // console.log("Client connected:", socket.id);
 
-  // Passwortüberprüfung
-  socket.on("authenticate", (password) => {
-    console.log("auth");
-    if (passwort_ueberpruefen(password)) {
-      console.log("Client authenticated:", socket.id);
-      cars[socket.id] = {
-        x: canvasWidth / 2,
-        y: canvasHeight / 2,
-        width: 30,
-        height: 30,
-        color: getRandomColor(),
-        dx: 0,
-        dy: 0,
-      };
-      socket.emit("authenticated", true);
+    // socket.on("password", (password) => {
+    //  const result = passwort_ueberpruefen(password);
+    //  socket.emit("passwordResult", result);
+    // });
+
+    // Passwortüberprüfung
+    socket.on("authenticate", (password) => {
+      console.log("auth");
+      if (passwort_ueberpruefen(password)) {
+        console.log("Client authenticated:", socket.id);
+        cars[socket.id] = {
+          x: canvasWidth / 2,
+          y: canvasHeight / 2,
+          width: 30,
+          height: 30,
+          color: getRandomColor(),
+          dx: 0,
+          dy: 0,
+        };
+        socket.emit("authenticated", true);
+        io.emit("refreshAll", cars);
+      } else {
+        console.log("Client authentication failed:", socket.id);
+        socket.emit("authenticated", false);
+        socket.emit("passwordResult", false); // Neue Zeile: Senden Sie eine Nachricht, dass das Passwort falsch ist
+        socket.disconnect();
+      }
+    });
+
+    // Handle disconnect event
+    socket.on("disconnect", () => {
+      console.log("Client disconnected:", socket.id);
+      delete cars[socket.id];
       io.emit("refreshAll", cars);
-    } else {
-      console.log("Client authentication failed:", socket.id);
-      socket.emit("authenticated", false);
-      socket.emit("passwordResult", false); // Neue Zeile: Senden Sie eine Nachricht, dass das Passwort falsch ist
-      socket.disconnect();
-    }
+    });
+
+    socket.on("move", (direction) => {
+      switch (direction) {
+        case "ArrowLeft": // Links
+          cars[socket.id].dx = -1;
+          console.log("left");
+          break;
+        case "ArrowUp": // Hoch
+          cars[socket.id].dy = -1;
+          break;
+        case "ArrowRight": // Rechts
+          cars[socket.id].dx = 1;
+          break;
+        case "ArrowDown": // Runter
+          cars[socket.id].dy = 1;
+          break;
+      }
+    });
   });
 
-  // Handle disconnect event
-  socket.on("disconnect", () => {
-    console.log("Client disconnected:", socket.id);
-    delete cars[socket.id];
-    io.emit("refreshAll", cars);
+  server.listen(port, () => {
+    console.log("Server is running on port 3000");
   });
-
-  socket.on("move", (direction) => {
-    switch (direction) {
-      case "ArrowLeft": // Links
-        cars[socket.id].dx = -1;
-        console.log("left");
-        break;
-      case "ArrowUp": // Hoch
-        cars[socket.id].dy = -1;
-        break;
-      case "ArrowRight": // Rechts
-        cars[socket.id].dx = 1;
-        break;
-      case "ArrowDown": // Runter
-        cars[socket.id].dy = 1;
-        break;
-    }
-  });
-});
-
-server.listen(port, () => {
-  console.log("Server is running on port 3000");
 });
